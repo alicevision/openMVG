@@ -12,8 +12,11 @@ addons:
   apt:
     sources:
       - ubuntu-toolchain-r-test
+      - llvm-toolchain-precise
     packages:
       #- cmake # Manually install latest version (>=3.0)
+      - g++-4.8
+      - clang-3.8
       - lcov
       - libpng-dev
       - libjpeg8-dev
@@ -22,9 +25,18 @@ addons:
       - libxxf86vm-dev
       - x11proto-xf86vidmode-dev
       - libxrandr-dev
-      - g++-4.8
       - libatlas-base-dev
       - libsuitesparse-dev
+
+matrix:
+  include:
+    - compiler: gcc
+      env: CXX_COMPILER=g++-4.8 C_COMPILER=gcc-4.8 TOOLSET=gcc ALICEVISION_BUILD_SFM=ON ALICEVISION_BUILD_MVS=ON ALICEVISION_USE_CUDA=OFF ALICEVISION_BUILD_TESTS=ON ALICEVISION_BUILD_EXAMPLES=ON
+    - compiler: clang
+      # clang 3.8 is  supported in cuda >= 8.0
+      env: CXX_COMPILER=clang++-3.8 C_COMPILER=clang-3.8 TOOLSET=clang ALICEVISION_BUILD_SFM=ON ALICEVISION_BUILD_MVS=ON ALICEVISION_USE_CUDA=OFF ALICEVISION_BUILD_TESTS=OFF ALICEVISION_BUILD_EXAMPLES=ON
+    - compiler: gcc
+      env: CXX_COMPILER=g++-4.8 C_COMPILER=gcc-4.8 TOOLSET=gcc ALICEVISION_BUILD_SFM=OFF ALICEVISION_BUILD_MVS=ON ALICEVISION_USE_CUDA=ON ALICEVISION_BUILD_TESTS=OFF ALICEVISION_BUILD_EXAMPLES=OFF
 
 env:
   global:
@@ -68,10 +80,12 @@ before_script:
      cmake \
        -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
        -DTARGET_ARCHITECTURE=core \
-       -DALICEVISION_BUILD_TESTS=ON \
-       -DALICEVISION_BUILD_EXAMPLES=ON \
+       -DALICEVISION_BUILD_SFM=${ALICEVISION_BUILD_SFM} \
+       -DALICEVISION_BUILD_MVS=${ALICEVISION_BUILD_MVS} \
+       -DALICEVISION_BUILD_TESTS=${ALICEVISION_BUILD_TESTS} \
+       -DALICEVISION_BUILD_EXAMPLES=${ALICEVISION_BUILD_EXAMPLES} \
        -DALICEVISION_USE_OPENCV=ON \
-       -DALICEVISION_USE_CUDA=OFF \
+       -DALICEVISION_USE_CUDA=${ALICEVISION_USE_CUDA} \
        -DOpenCV_DIR="${DEPS_INSTALL_PATH}/share/OpenCV" \
        -DALICEVISION_USE_OPENGV=ON \
        -DOPENGV_DIR="${DEPS_INSTALL_PATH}" \
@@ -94,21 +108,23 @@ script:
 # Perform benchmark through ground truth tests with different scenes
   - >
     if [ -n "$TRAVIS_PULL_REQUEST" ]; then # limit to PR builds
-      if folder_not_empty "$GT_TEST_SOURCE"; then
-        echo "Evaluation benchmark found in cache.";
+      if [ "${ALICEVISION_BUILD_TESTS}" == "ON" ]; then
+        if folder_not_empty "$GT_TEST_SOURCE"; then
+          echo "Evaluation benchmark found in cache.";
+          cd $GT_TEST_SOURCE
+          git pull  # ensure that we are up-to-date
+        else
+          git clone --branch master https://github.com/alicevision/SfM_quality_evaluation.git $GT_TEST_SOURCE;
+        fi
         cd $GT_TEST_SOURCE
-        git pull  # ensure that we are up-to-date
-      else
-        git clone --branch master https://github.com/alicevision/SfM_quality_evaluation.git $GT_TEST_SOURCE;
+        git checkout 1828a5076ccca86fd523c92a768f1d518dfdbb91 # checkout a specific commit to ensure repeatability
+        python EvaluationLauncher.py -s "$ALICEVISION_BUILD/$BUILD_SYSTEM-$BUILD_PROCESSOR" -i Benchmarking_Camera_Calibration_2008/ -o ${GT_TEST_OUTPUT} -r ${GT_TEST_RESULTS} --limit 3
+        cat ${GT_TEST_RESULTS}
+        # Return to root and remove GT huge files to avoid cache problems
+        cd $TRAVIS_BUILD_DIR
+        rm -rf $GT_TEST_SOURCE
+        rm -rf $GT_TEST_OUTPUT
       fi
-      cd $GT_TEST_SOURCE
-      git checkout 1828a5076ccca86fd523c92a768f1d518dfdbb91 # checkout a specific commit to ensure repeatability
-      python EvaluationLauncher.py -s "$ALICEVISION_BUILD/$BUILD_SYSTEM-$BUILD_PROCESSOR" -i Benchmarking_Camera_Calibration_2008/ -o ${GT_TEST_OUTPUT} -r ${GT_TEST_RESULTS} --limit 3
-      cat ${GT_TEST_RESULTS}
-      # Return to root and remove GT huge files to avoid cache problems
-      cd $TRAVIS_BUILD_DIR
-      rm -rf $GT_TEST_SOURCE
-      rm -rf $GT_TEST_OUTPUT
     fi
 
 #after_success:
@@ -131,4 +147,3 @@ before_cache:
 cache:
   # Enable compiler cache
   ccache: true
-
