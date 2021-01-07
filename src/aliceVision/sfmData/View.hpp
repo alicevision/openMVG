@@ -32,6 +32,20 @@ enum class EEXIFOrientation
   , UNKNOWN = -1
 };
 
+float computeCameraExposureSetting(float shutter, float fnumber, float iso, float refFNumber = 1.0f,
+                                   float refISO = 100.0);
+
+inline float cameraExposureSettingsToEV(float cameraExposureSetting)
+{
+    return std::log2(cameraExposureSetting);
+}
+
+inline float computeEV(float shutter, float fnumber, float iso, float refFNumber = 1.0f, float refISO = 100.0)
+{
+    const float cameraExposureSetting = computeCameraExposureSetting(shutter, fnumber, iso, refFNumber, refISO);
+    return std::log2(1.0f / cameraExposureSetting);
+}
+
 /**
  * @brief A view define an image by a string and unique indexes for
  * the view, the camera intrinsic, the pose and the subpose if the camera is part of a rig
@@ -207,13 +221,15 @@ public:
    * @brief Get the Camera Exposure Setting value.
    * For the same scene, this value is linearly proportional to the amount of light captured by the camera according to
    * the shooting parameters (shutter speed, f-number, iso).
+   * @see https://en.wikipedia.org/wiki/Film_speed#Measurements_and_calculations
    */
-  float getCameraExposureSetting(const float referenceISO = 100.0f, const float referenceFNumber = 1.0f) const;
+  float getCameraExposureSetting() const;
 
   /**
    * @brief Get the Exposure Value. EV is a number that represents a combination of a camera's shutter speed and
    * f-number, such that all combinations that yield the same exposure have the same EV.
    * It progresses in a linear sequence as camera exposure is changed in power-of-2 steps.
+   * @see https://en.wikipedia.org/wiki/Exposure_value
    */
   float getEv() const;
 
@@ -316,7 +332,17 @@ public:
    */
   double getMetadataShutter() const
   {
-      return getDoubleMetadata({"ExposureTime", "Shutter Speed Value"});
+      if(hasDigitMetadata({"ExposureTime"}))
+      {
+          return getDoubleMetadata({"ExposureTime"});
+      }
+      if(hasDigitMetadata({"ShutterSpeedValue", "Shutter Speed Value"}))
+      {
+          const double shutterSpeedValue = getDoubleMetadata({"ShutterSpeedValue", "Shutter Speed Value"});
+          // exposureTime = 1.0 / 2.0^(shutterSpeedValue)
+          return 1.0 / std::pow(2.0, shutterSpeedValue);
+      }
+      return -1.0;
   }
 
   /**
@@ -335,7 +361,7 @@ public:
           // fnumber = 2^(aperture/2)
           return std::pow(2.0, aperture / 2.0);
       }
-      return -1;
+      return -1.0;
   }
 
   /**
