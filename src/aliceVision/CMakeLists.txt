@@ -34,6 +34,7 @@ if(ALICEVISION_BUILD_SFM)
 
   if(ALICEVISION_HAVE_OPENCV)
     add_subdirectory(calibration)
+    add_subdirectory(imageMasking)
   endif()
 endif()
 

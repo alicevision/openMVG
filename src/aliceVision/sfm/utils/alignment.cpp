@@ -7,6 +7,7 @@
 
 #include <aliceVision/sfm/utils/alignment.hpp>
 #include <aliceVision/geometry/rigidTransformation3D.hpp>
+#include <aliceVision/stl/regex.hpp>
 
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/statistics/stats.hpp>
@@ -563,6 +564,8 @@ IndexT getViewIdFromExpression(const sfmData::SfMData& sfmData, const std::strin
 {
   IndexT viewId = -1;
 
+  std::regex cameraRegex = simpleFilterToRegex_noThrow(camName);
+
   try
   {
     viewId = boost::lexical_cast<IndexT>(camName);
@@ -573,16 +576,16 @@ IndexT getViewIdFromExpression(const sfmData::SfMData& sfmData, const std::strin
   {
     viewId = -1;
   }
-  
+  sfmData::EEXIFOrientation orientation = sfmData::EEXIFOrientation::UNKNOWN; 
   if(viewId == -1)
   {
     for(const auto & view : sfmData.getViews())
     {
-      std::string path = view.second->getImagePath();      
-      std::size_t found = path.find(camName);
-      if (found!=std::string::npos)
+      const std::string path = view.second->getImagePath();
+      if(std::regex_match(path, cameraRegex))
       {
-          viewId = view.second->getViewId();          
+          orientation = view.second->getMetadataOrientation();
+          viewId = view.second->getViewId();
           break;
       }
     }
