@@ -8,12 +8,19 @@ AliceVision is licensed under the [MPL2 license](LICENSE-MPL2.md).
 modules are based on the libmv code released under MIT, see [LICENSE-MIT-libmv.md](LICENSE-MIT-libmv.md).
 
 
-It also contains one file with different license:
+Other copyrights and licenses embedded:
 
 *   __kvld__  
     [src/aliceVision/matching/kvld](src/aliceVision/matching/kvld)  
     Copyright (C) 2011-12 Zhe Liu and Pierre Moulon.  
     This file was first released under BSD-2-Clause license, see [LICENSE-BSD-2-Clause](http://opensource.org/licenses/BSD-2-Clause).
+
+*   __sparseICP__
+    [The 3D-3D registration module](src\aliceVision\registration) is based on sparceicp implementation:
+    https://github.com/OpenGP/sparseicp
+    Copyright (C) 2013  LGG, EPFL
+    "Sparse Iterative Closest Point" by Sofien Bouaziz, Andrea Tagliasacchi, Mark Pauly
+    This project was originally released under [MPL2 license](LICENSE-MPL2.md).
 
 
 ## Third parties licenses
@@ -134,6 +141,11 @@ This program is based on works distributed under the terms of another license(s)
     Copyright (C) 2000 International Business Machines Corporation  
     and others.  All Rights Reserved.  
     Distributed under the terms of the Eclipse Public License (EPL).
+
+*   __PCL__ (optional)
+    [Point Cloud Library (PCL)](www.pointclouds.org)
+    Copyright (c) 2010-2011, Willow Garage, Inc.
+    Distributed under the [BSD License](http://www.opensource.org/licenses/bsd-license.php).
 
 *   __PopSift__ (optional)  
     [https://github.com/alicevision/popsift](https://github.com/alicevision/popsift)  

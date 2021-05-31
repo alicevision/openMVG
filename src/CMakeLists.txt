@@ -53,6 +53,7 @@ option(ALICEVISION_BUILD_HDR "Build AliceVision HDR part" ON)
 option(ALICEVISION_BUILD_SOFTWARE "Build AliceVision command line tools." ON)
 option(ALICEVISION_BUILD_EXAMPLES "Build AliceVision samples applications." OFF)
 option(ALICEVISION_BUILD_COVERAGE "Enable code coverage generation (gcc only)" OFF)
+option(ALICEVISION_BUILD_REGISTRATION "Build AliceVision 3D-3D Registration part" OFF)
 trilean_option(ALICEVISION_BUILD_DOC "Build AliceVision documentation" AUTO)
 
 trilean_option(ALICEVISION_USE_OPENMP "Enable OpenMP parallelization" ON)
@@ -404,14 +405,13 @@ endif()
 # - external if FLANN_INCLUDE_DIR_HINTS and a valid Flann setup is found
 # ==============================================================================
 if(ALICEVISION_BUILD_SFM)
-  if(NOT DEFINED FLANN_INCLUDE_DIR_HINTS)
+  find_package(flann QUIET)
+  if(NOT FLANN_FOUND OR ALICEVISION_USE_INTERNAL_FLANN)
     set(FLANN_INCLUDE_DIR_HINTS ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/flann/src/cpp)
     set(ALICEVISION_USE_INTERNAL_FLANN ON)
-  endif()
-  find_package(Flann QUIET)
-  if(NOT FLANN_FOUND OR ALICEVISION_USE_INTERNAL_FLANN)
     set(FLANN_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/flann/src/cpp)
-    set(FLANN_LIBRARY flann_cpp_s)
+    set(FLANN_LIBRARY flann::flann_cpp_s)
+    set(FLANN_LIBRARIES ${FLANN_LIBRARY})
   endif()
 endif()
 
@@ -669,6 +669,25 @@ endif()
 if(ALICEVISION_BUILD_MVS)
   find_package(Geogram REQUIRED)
   message(STATUS "Geogram: ${GEOGRAM_LIBRARY}, ${GEOGRAM_INCLUDE_DIR}")
+endif()
+
+# ==============================================================================
+# Point Cloud Library (PCL)
+# ==============================================================================
+if(ALICEVISION_BUILD_REGISTRATION)
+  set(AV_Boost_LIBRARIES ${Boost_LIBRARIES})
+  set(AV_FLANN_LIBRARY ${FLANN_LIBRARY})
+  set(AV_FLANN_INCLUDE_DIRS ${FLANN_INCLUDE_DIRS})
+  find_package(PCL 1.8 REQUIRED COMPONENTS registration io common octree kdtree search sample_consensus features filters)
+
+  message(STATUS "PCL_LIBRARIES: ${PCL_LIBRARIES}")
+  message(STATUS "PCL_INCLUDE_DIRS: ${PCL_INCLUDE_DIRS}")
+
+  include_directories (${PCL_INCLUDE_DIRS})
+  set(Boost_LIBRARIES ${AV_Boost_LIBRARIES})
+  set(BOOST_LIBRARIES ${AV_Boost_LIBRARIES})
+  set(FLANN_LIBRARY   ${AV_FLANN_LIBRARY})
+  set(FLANN_INCLUDE_DIRS ${AV_FLANN_INCLUDE_DIRS})
 endif()
 
 # ==============================================================================

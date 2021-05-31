@@ -35,6 +35,10 @@ if(ALICEVISION_BUILD_SFM)
   if(ALICEVISION_HAVE_OPENCV)
     add_subdirectory(calibration)
   endif()
+
+  if(ALICEVISION_BUILD_REGISTRATION)
+    add_subdirectory(registration)
+  endif()
 endif()
 
 if(ALICEVISION_BUILD_HDR)

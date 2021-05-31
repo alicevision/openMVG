@@ -278,6 +278,16 @@ if(ALICEVISION_BUILD_SFM)
   )
 endif() # if(ALICEVISION_BUILD_SFM)
 
+# 3D 3D registration
+if(ALICEVISION_BUILD_REGISTRATION)
+  alicevision_add_software(aliceVision_3d3dRegistration
+    SOURCE main_3d3dRegistration.cpp
+    FOLDER ${FOLDER_SOFTWARE_PIPELINE}
+    LINKS aliceVision_system
+          aliceVision_registration
+  )
+endif()
+
 ### MVS software
 if(ALICEVISION_BUILD_MVS)
 
