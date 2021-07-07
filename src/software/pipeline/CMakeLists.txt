@@ -235,7 +235,7 @@ if(ALICEVISION_BUILD_SFM)
   )
 
   if(ALICEVISION_HAVE_CCTAG)
-    target_link_libraries(aliceVision_rigCalibration PUBLIC CCTag::CCTag)
+    target_link_libraries(aliceVision_rigCalibration_exe PUBLIC CCTag::CCTag)
   endif()
 
   # Localize a camera
@@ -253,7 +253,7 @@ if(ALICEVISION_BUILD_SFM)
   )
 
   if(ALICEVISION_HAVE_CCTAG)
-    target_link_libraries(aliceVision_cameraLocalization PUBLIC CCTag::CCTag)
+    target_link_libraries(aliceVision_cameraLocalization_exe PUBLIC CCTag::CCTag)
   endif()
 
   # Localize a rig
@@ -272,7 +272,7 @@ if(ALICEVISION_BUILD_SFM)
   )
 
   if(ALICEVISION_HAVE_CCTAG)
-    target_link_libraries(aliceVision_rigLocalization PUBLIC CCTag::CCTag)
+    target_link_libraries(aliceVision_rigLocalization_exe PUBLIC CCTag::CCTag)
   endif()
 
   # Prepare dense scene for MVS
@@ -289,8 +289,9 @@ if(ALICEVISION_BUILD_SFM)
           Boost::boost
           Boost::timer
   )
+         
 endif() # if(ALICEVISION_BUILD_SFM)
-
+   
 ### MVS software
 if(ALICEVISION_BUILD_MVS)
 
@@ -404,6 +405,13 @@ if(ALICEVISION_BUILD_MVS)
   )
 endif() # if(ALICEVISION_BUILD_MVS)
 
+# Photometric Stereo
+alicevision_add_software(aliceVision_photometricStereo
+  SOURCE main_photometricStereo.cpp
+  FOLDER ${FOLDER_SOFTWARE_PIPELINE}
+  LINKS aliceVision_photometricStereo
+        Boost::program_options
+)
 
 if(ALICEVISION_BUILD_HDR)
 
