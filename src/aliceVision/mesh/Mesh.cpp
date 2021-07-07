@@ -2292,12 +2292,12 @@ bool Mesh::loadFromObjAscii(const std::string& objAsciiFileName)
                 int n2 = mvsUtils::findNSubstrsInString(line, "//");
                 if((n1 == 3 && n2 == 0) || 
                    (n1 == 6 && n2 == 0) ||
-                   (n1 == 0 && n2 == 3) ||
+                   (n2 == 3) ||
                    (n1 == 0 && n2 == 0))
                     ntris += 1;
                 else if((n1 == 4 && n2 == 0) ||
                         (n1 == 8 && n2 == 0) ||
-                        (n1 == 0 && n2 == 4))
+                        (n2 == 4))
                     ntris += 2;
             }
             nlines++;
