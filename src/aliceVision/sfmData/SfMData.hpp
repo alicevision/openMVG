@@ -294,6 +294,11 @@ public:
     return *(views.at(viewId));
   }
 
+  bool viewsExists(IndexT viewId) const 
+  {
+    return (views.find(viewId) != views.end());
+  }
+
   /**
    * @brief Gives the pose of the input view. If this view is part of a rig, it returns rigPose + rigSubPose.
    * @param[in] view The given view

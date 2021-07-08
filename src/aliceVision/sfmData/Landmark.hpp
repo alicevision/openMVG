@@ -63,6 +63,7 @@ struct Landmark
   feature::EImageDescriberType descType = feature::EImageDescriberType::UNINITIALIZED;
   Observations observations;
   image::RGBColor rgb = image::WHITE;    //!> the color associated to the point
+  IndexT referenceView = UndefinedIndexT;
   
   bool operator==(const Landmark& other) const
   {

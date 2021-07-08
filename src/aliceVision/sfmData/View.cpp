@@ -15,7 +15,9 @@
 
 
 #include <iostream>
+#include <boost/filesystem.hpp>
 
+namespace fs = boost::filesystem;
 
 namespace aliceVision {
 namespace sfmData {
@@ -202,6 +204,22 @@ int View::getIntMetadata(const std::vector<std::string>& names) const
     {
         return -1;
     }
+}
+
+int View::tryGetSequenceNumberFromFileName()
+{
+    fs::path path = _imagePath;
+
+    std::string filename = path.stem().string();
+
+    std::smatch sm;
+    std::regex regex("([\\d]+)");
+    
+    if (!std::regex_match(filename, sm, regex)) {
+      return -1;
+    }
+
+    return std::stoi(sm[0]);
 }
 
 } // namespace sfmData

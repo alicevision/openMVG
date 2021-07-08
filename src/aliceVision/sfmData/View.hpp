@@ -522,6 +522,8 @@ public:
     _metadata[key] = value;
   }
 
+  int tryGetSequenceNumberFromFileName();
+
 private:
 
   /// image path on disk
