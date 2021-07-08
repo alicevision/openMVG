@@ -368,7 +368,7 @@ void BundleAdjustmentSymbolicCeres::addExtrinsicsToProblem(const sfmData::SfMDat
 
 void BundleAdjustmentSymbolicCeres::addIntrinsicsToProblem(const sfmData::SfMData& sfmData, BundleAdjustment::ERefineOptions refineOptions, ceres::Problem& problem)
 {
-  const bool refineIntrinsicsOpticalCenter = (refineOptions & REFINE_INTRINSICS_OPTICALCENTER_ALWAYS) || (refineOptions & REFINE_INTRINSICS_OPTICALCENTER_IF_ENOUGH_DATA);
+  const bool refineIntrinsicsOpticalCenter = (refineOptions & REFINE_INTRINSICS_OPTICALOFFSET_ALWAYS) || (refineOptions & REFINE_INTRINSICS_OPTICALOFFSET_IF_ENOUGH_DATA);
   const bool refineIntrinsicsFocalLength = refineOptions & REFINE_INTRINSICS_FOCAL;
   const bool refineIntrinsicsDistortion = refineOptions & REFINE_INTRINSICS_DISTORTION;
   const bool refineIntrinsics = refineIntrinsicsDistortion || refineIntrinsicsFocalLength || refineIntrinsicsOpticalCenter;
@@ -456,14 +456,14 @@ void BundleAdjustmentSymbolicCeres::addIntrinsicsToProblem(const sfmData::SfMDat
     }
 
     const std::size_t minImagesForOpticalCenter = 3;
-    bool optional_center = ((refineOptions & REFINE_INTRINSICS_OPTICALCENTER_IF_ENOUGH_DATA) && (usageCount > minImagesForOpticalCenter));
-    if ((refineOptions & REFINE_INTRINSICS_OPTICALCENTER_ALWAYS) || optional_center)
+    bool optional_center = ((refineOptions & REFINE_INTRINSICS_OPTICALOFFSET_IF_ENOUGH_DATA) && (usageCount > minImagesForOpticalCenter));
+    if ((refineOptions & REFINE_INTRINSICS_OPTICALOFFSET_ALWAYS) || optional_center)
     {
       // refine optical center within 10% of the image size.
       assert(intrinsicBlock.size() >= 4);
 
-      const double opticalCenterMinPercent = 0.45;
-      const double opticalCenterMaxPercent = 0.55;
+      const double opticalCenterMinPercent = 0.45 - 0.5;
+      const double opticalCenterMaxPercent = 0.55 - 0.5;
 
       // add bounds to the principal point
       problem.SetParameterLowerBound(intrinsicBlockPtr, 2, opticalCenterMinPercent * intrinsicPtr->w());
@@ -586,7 +586,7 @@ void BundleAdjustmentSymbolicCeres::createProblem(const sfmData::SfMData& sfmDat
 
   // ensure we are not using incompatible options
   // REFINEINTRINSICS_OPTICALCENTER_ALWAYS and REFINEINTRINSICS_OPTICALCENTER_IF_ENOUGH_DATA cannot be used at the same time
-  assert(!((refineOptions & REFINE_INTRINSICS_OPTICALCENTER_ALWAYS) && (refineOptions & REFINE_INTRINSICS_OPTICALCENTER_IF_ENOUGH_DATA)));
+  assert(!((refineOptions & REFINE_INTRINSICS_OPTICALOFFSET_ALWAYS) && (refineOptions & REFINE_INTRINSICS_OPTICALOFFSET_IF_ENOUGH_DATA)));
 
   // add SfM extrincics to the Ceres problem
   addExtrinsicsToProblem(sfmData, refineOptions, problem);
@@ -601,7 +601,7 @@ void BundleAdjustmentSymbolicCeres::createProblem(const sfmData::SfMData& sfmDat
 void BundleAdjustmentSymbolicCeres::updateFromSolution(sfmData::SfMData& sfmData, ERefineOptions refineOptions) const
 {
   const bool refinePoses = (refineOptions & REFINE_ROTATION) || (refineOptions & REFINE_TRANSLATION);
-  const bool refineIntrinsicsOpticalCenter = (refineOptions & REFINE_INTRINSICS_OPTICALCENTER_ALWAYS) || (refineOptions & REFINE_INTRINSICS_OPTICALCENTER_IF_ENOUGH_DATA);
+  const bool refineIntrinsicsOpticalCenter = (refineOptions & REFINE_INTRINSICS_OPTICALOFFSET_ALWAYS) || (refineOptions & REFINE_INTRINSICS_OPTICALOFFSET_IF_ENOUGH_DATA);
   const bool refineIntrinsics = (refineOptions & REFINE_INTRINSICS_FOCAL) || (refineOptions & REFINE_INTRINSICS_DISTORTION) || refineIntrinsicsOpticalCenter;
   const bool refineStructure = refineOptions & REFINE_STRUCTURE;
 

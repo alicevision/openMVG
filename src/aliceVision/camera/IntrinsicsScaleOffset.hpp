@@ -52,10 +52,19 @@ public:
     return _offset; 
   }
 
+  inline const Vec2 getPrincipalPoint() const 
+  {
+    Vec2 ret = _offset;
+    ret(0) += double(_w) * 0.5;
+    ret(1) += double(_h) * 0.5;
+
+    return ret;
+  }
+
   // Transform a point from the camera plane to the image plane
   Vec2 cam2ima(const Vec2& p) const override
   {
-    return p.cwiseProduct(_scale) + _offset;
+    return p.cwiseProduct(_scale) + getPrincipalPoint();
   }
 
   virtual Eigen::Matrix2d getDerivativeCam2ImaWrtScale(const Vec2& p) const
@@ -88,8 +97,10 @@ public:
   {
     Vec2 np;
 
-    np(0) = (p(0) - _offset(0)) / _scale(0);
-    np(1) = (p(1) - _offset(1)) / _scale(1);
+    Vec2 pp = getPrincipalPoint();
+
+    np(0) = (p(0) - pp(0)) / _scale(0);
+    np(1) = (p(1) - pp(1)) / _scale(1);
 
     return np;
   }
@@ -98,8 +109,10 @@ public:
   {
       Eigen::Matrix2d M = Eigen::Matrix2d::Zero();
 
-      M(0, 0) = -(p(0) - _offset(0)) / (_scale(0) * _scale(0));
-      M(1, 1) = -(p(1) - _offset(1)) / (_scale(1) * _scale(1));
+      Vec2 pp = getPrincipalPoint();
+
+      M(0, 0) = -(p(0) - pp(0)) / (_scale(0) * _scale(0));
+      M(1, 1) = -(p(1) - pp(1)) / (_scale(1) * _scale(1));
 
       return M;
   }
