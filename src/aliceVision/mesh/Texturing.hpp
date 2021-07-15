@@ -52,6 +52,7 @@ std::string EUnwrapMethod_enumToString(EUnwrapMethod method);
 enum EVisibilityRemappingMethod {
     Pull = 1,    //< For each vertex of the input mesh, pull the visibilities from the closest vertex in the reconstruction.
     Push = 2,    //< For each vertex of the reconstruction, push the visibilities to the closest triangle in the input mesh.
+    MeshItself = 4,  //< For each vertex of the mesh, test the reprojection in each camera
     PullPush = Pull | Push  //< Combine results from Pull and Push results.
 };
 
@@ -113,10 +114,12 @@ public:
      * @brief Remap visibilities
      *
      * @param[in] remappingMethod the remapping method
+     * @param[in] mp multiview scene params
      * @param[in] refMesh the reference mesh
      * @param[in] refPointsVisibilities the reference visibilities
      */
-    void remapVisibilities(EVisibilityRemappingMethod remappingMethod, const Mesh& refMesh);
+    void remapVisibilities(EVisibilityRemappingMethod remappingMethod, const mvsUtils::MultiViewParams& mp,
+                           const Mesh& refMesh);
 
     /**
      * @brief Replace inner mesh with the mesh loaded from 'otherMeshPath'

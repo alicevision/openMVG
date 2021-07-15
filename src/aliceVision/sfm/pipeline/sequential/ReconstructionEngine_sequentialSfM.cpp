@@ -174,28 +174,35 @@ bool ReconstructionEngine_sequentialSfM::process()
     std::vector<Pair> initialImagePairCandidates = getInitialImagePairsCandidates();
     createInitialReconstruction(initialImagePairCandidates);
   }
-  else if(_sfmData.getLandmarks().empty())
-  {
-    std::set<IndexT> prevReconstructedViews = _sfmData.getValidViews();
-    triangulate({}, prevReconstructedViews);
-    bundleAdjustment(prevReconstructedViews);
-  }
   else
   {
-    // If we have already reconstructed landmarks, we need to recognize the corresponding tracks
-    // and update the landmarkIds accordingly.
-    // Note: each landmark has a corresponding track with the same id (landmarkId == trackId).
-    remapLandmarkIdsToTrackIds();
-
-    if(_params.useLocalBundleAdjustment)
+    if(!_sfmData.getLandmarks().empty())
     {
-      const std::set<IndexT> reconstructedViews = _sfmData.getValidViews();
-      if(!reconstructedViews.empty())
+      // If we have already reconstructed landmarks, we need to recognize the corresponding tracks
+      // and update the landmarkIds accordingly.
+      // Note: each landmark has a corresponding track with the same id (landmarkId == trackId).
+      remapLandmarkIdsToTrackIds();
+
+      if(_params.useLocalBundleAdjustment)
       {
-        // Add the reconstructed views to the LocalBA graph
-        _localStrategyGraph->updateGraphWithNewViews(_sfmData, _map_tracksPerView, reconstructedViews, _params.kMinNbOfMatches);
-        _localStrategyGraph->updateRigEdgesToTheGraph(_sfmData);
+        const std::set<IndexT> reconstructedViews = _sfmData.getValidViews();
+        if(!reconstructedViews.empty())
+        {
+          // Add the reconstructed views to the LocalBA graph
+          _localStrategyGraph->updateGraphWithNewViews(_sfmData, _map_tracksPerView, reconstructedViews, _params.kMinNbOfMatches);
+          _localStrategyGraph->updateRigEdgesToTheGraph(_sfmData);
+        }
       }
+    }
+
+    // Optimize input before starting adding new views
+    {
+      std::set<IndexT> prevReconstructedViews = _sfmData.getValidViews();
+      triangulate({}, prevReconstructedViews);
+      bundleAdjustment(prevReconstructedViews);
+      // The optimization could allow the triangulation of new landmarks
+      triangulate({}, prevReconstructedViews);
+      bundleAdjustment(prevReconstructedViews);
     }
   }
 

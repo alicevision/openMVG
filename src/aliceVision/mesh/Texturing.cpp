@@ -72,6 +72,8 @@ EVisibilityRemappingMethod EVisibilityRemappingMethod_stringToEnum(const std::st
         return EVisibilityRemappingMethod::Push;
     if (method == "PullPush")
         return EVisibilityRemappingMethod::PullPush;
+    if(method == "MeshItself")
+        return EVisibilityRemappingMethod::MeshItself;
     throw std::out_of_range("Invalid visibilities remapping method " + method);
 }
 
@@ -85,6 +87,8 @@ std::string EVisibilityRemappingMethod_enumToString(EVisibilityRemappingMethod m
         return "Pull";
     case EVisibilityRemappingMethod::PullPush:
         return "PullPush";
+    case EVisibilityRemappingMethod::MeshItself:
+        return "MeshItself";
     }
     throw std::out_of_range("Unrecognized EVisibilityRemappingMethod");
 }
@@ -863,18 +867,33 @@ void Texturing::loadOBJWithAtlas(const std::string& filename, bool flipNormals)
     }
 }
 
-void Texturing::remapVisibilities(EVisibilityRemappingMethod remappingMethod, const Mesh& refMesh)
+void Texturing::remapVisibilities(EVisibilityRemappingMethod remappingMethod,
+                                  const mvsUtils::MultiViewParams& mp, const Mesh& refMesh)
 {
-  if (refMesh.pointsVisibilities.empty())
-    throw std::runtime_error("Texturing: Cannot remap visibilities as there is no reference points.");
+    if(refMesh.pointsVisibilities.empty() &&
+       (remappingMethod & mesh::EVisibilityRemappingMethod::Pull ||
+        remappingMethod & mesh::EVisibilityRemappingMethod::Push))
+    {
+        throw std::runtime_error("Texturing: Cannot remap visibilities as there is no reference points.");
+    }
 
-  // remap visibilities from the reference onto the mesh
-  if(remappingMethod == EVisibilityRemappingMethod::PullPush || remappingMethod == mesh::EVisibilityRemappingMethod::Pull)
-    remapMeshVisibilities_pullVerticesVisibility(refMesh, *mesh);
-  if(remappingMethod == EVisibilityRemappingMethod::PullPush || remappingMethod == mesh::EVisibilityRemappingMethod::Push)
-    remapMeshVisibilities_pushVerticesVisibilityToTriangles(refMesh, *mesh);
-  if(mesh->pointsVisibilities.empty())
-    throw std::runtime_error("No visibility after visibility remapping.");
+    // remap visibilities from the reference onto the mesh
+    if(remappingMethod & mesh::EVisibilityRemappingMethod::Pull)
+    {
+        remapMeshVisibilities_pullVerticesVisibility(refMesh, *mesh);
+    }
+    if(remappingMethod & mesh::EVisibilityRemappingMethod::Push)
+    {
+        remapMeshVisibilities_pushVerticesVisibilityToTriangles(refMesh, *mesh);
+    }
+    if(remappingMethod & EVisibilityRemappingMethod::MeshItself)
+    {
+        remapMeshVisibilities_meshItself(mp, *mesh);
+    }
+    if(mesh->pointsVisibilities.empty())
+    {
+        throw std::runtime_error("No visibility after visibility remapping.");
+    }
 }
 
 void Texturing::replaceMesh(const std::string& otherMeshPath, bool flipNormals)
